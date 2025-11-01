@@ -237,16 +237,32 @@ const SimpleTopicView = ({ selectedSubject, selectedClass, onBack, user }) => {
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedTopic(topic); }}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all group-hover:scale-105"
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Play className="w-4 h-4" />
-                      <span>Start AI Learning</span>
-                    </div>
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedTopic(topic); }}
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all group-hover:scale-105"
+                    >
+                      <div className="flex items-center justify-center space-x-2">
+                        <Play className="w-4 h-4" />
+                        <span>Start AI Learning</span>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setSelectedTopic(topic);
+                        setShowQuiz(true);
+                        setVideoCompleted(true); // Allow quiz without video
+                      }}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all text-sm"
+                    >
+                      <div className="flex items-center justify-center space-x-2">
+                        <Target className="w-4 h-4" />
+                        <span>Take Quiz</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -329,58 +345,86 @@ const SimpleTopicView = ({ selectedSubject, selectedClass, onBack, user }) => {
                         </div>
                       )}
                     </div>
-                  </div>
-                  
-                  {/* Quiz Section - Only show when quiz is requested AND video is completed */}
-                  {showQuiz && videoCompleted && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4 flex items-center">
-                        <Target className="w-5 h-5 mr-2 text-blue-600" />
-                        Interactive Quiz
-                      </h3>
-                      <QuizComponent 
-                        topic={selectedTopic.title || selectedTopic.name || 'General'} 
-                        onComplete={(score, total, ecoPoints, percentage) => {
-                          console.log('🎯 Quiz completed:', { score, total, ecoPoints, percentage });
-                          
-                          // Update eco points in navbar
-                          if (ecoPoints > 0) {
-                            console.log('🌱 Dispatching eco points update:', ecoPoints);
-                            window.dispatchEvent(new CustomEvent('eco-points-updated', { 
-                              detail: { ecoPoints: ecoPoints } 
-                            }));
-                            
-                            // Also update localStorage for persistence
-                            const currentPoints = parseInt(localStorage.getItem('ecoPoints') || '0');
-                            const newPoints = currentPoints + ecoPoints;
-                            localStorage.setItem('ecoPoints', newPoints.toString());
-                            console.log('🌱 Updated localStorage eco points:', newPoints);
-                          }
-                          
-                          // Close quiz after completion
-                          setShowQuiz(false);
-                        }}
-                        onEcoPointsEarned={(ecoPoints, percentage) => {
-                          console.log('🌱 Eco points earned:', ecoPoints, 'Percentage:', percentage);
-                          
-                          // Show notification
-                          const notification = document.createElement('div');
-                          notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-                          notification.innerHTML = `
-                            <div class="flex items-center space-x-2">
-                              <span class="font-bold">+${ecoPoints} Eco Points!</span>
-                              <span class="text-sm">Great job!</span>
+
+                    {/* Topic Quiz Section - Right below video */}
+                    {selectedTopic && (
+                      <div className="mt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold flex items-center">
+                            <Target className="w-5 h-5 mr-2 text-green-600" />
+                            Topic Quiz
+                          </h3>
+                          {!showQuiz && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowQuiz(true);
+                                console.log('🎯 Opening quiz for topic:', selectedTopic.title || selectedTopic.name);
+                              }}
+                              className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all text-sm font-medium flex items-center space-x-2"
+                            >
+                              <Target className="w-4 h-4" />
+                              <span>Start Quiz</span>
+                            </button>
+                          )}
+                        </div>
+                        
+                        {showQuiz && (
+                          <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <QuizComponent 
+                              topic={selectedTopic.title || selectedTopic.name || 'General'} 
+                              onComplete={(score, total, ecoPoints, percentage) => {
+                                console.log('🎯 Quiz completed:', { score, total, ecoPoints, percentage });
+                                
+                                // Update eco points in navbar
+                                if (ecoPoints > 0) {
+                                  console.log('🌱 Dispatching eco points update:', ecoPoints);
+                                  window.dispatchEvent(new CustomEvent('eco-points-updated', { 
+                                    detail: { ecoPoints: ecoPoints } 
+                                  }));
+                                  
+                                  // Also update localStorage for persistence
+                                  const currentPoints = parseInt(localStorage.getItem('ecoPoints') || '0');
+                                  const newPoints = currentPoints + ecoPoints;
+                                  localStorage.setItem('ecoPoints', newPoints.toString());
+                                  console.log('🌱 Updated localStorage eco points:', newPoints);
+                                }
+                                
+                                // Close quiz after completion
+                                setShowQuiz(false);
+                              }}
+                              onEcoPointsEarned={(ecoPoints, percentage) => {
+                                console.log('🌱 Eco points earned:', ecoPoints, 'Percentage:', percentage);
+                                
+                                // Show notification
+                                const notification = document.createElement('div');
+                                notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                                notification.innerHTML = `
+                                  <div class="flex items-center space-x-2">
+                                    <span class="font-bold">+${ecoPoints} Eco Points!</span>
+                                    <span class="text-sm">Great job!</span>
+                                  </div>
+                                `;
+                                document.body.appendChild(notification);
+                                
+                                setTimeout(() => {
+                                  notification.remove();
+                                }, 3000);
+                              }}
+                            />
+                            <div className="mt-4 flex justify-end">
+                              <button
+                                onClick={() => setShowQuiz(false)}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                              >
+                                Close Quiz
+                              </button>
                             </div>
-                          `;
-                          document.body.appendChild(notification);
-                          
-                          setTimeout(() => {
-                            notification.remove();
-                          }, 3000);
-                        }}
-                      />
-                    </div>
-                  )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Topic Details */}
@@ -422,29 +466,24 @@ const SimpleTopicView = ({ selectedSubject, selectedClass, onBack, user }) => {
                         </div>
                       )}
 
+                      {/* Quiz Button - Always Available */}
+                      <div className="space-y-2 mt-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setQuizRequested(true);
+                            setShowQuiz(true);
+                            console.log('🎯 Opening quiz for topic:', selectedTopic.title || selectedTopic.name);
+                          }}
+                          className="w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                        >
+                          📝 Take Topic Quiz & Earn Points
+                        </button>
+                      </div>
+                      
                       {/* Completion & Eco Points */}
                       {user && (
-                        <div className="space-y-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!videoCompleted) {
-                                alert('Please complete the video first before taking the quiz!');
-                                return;
-                              }
-                              setQuizRequested(true);
-                              setShowQuiz(true);
-                              console.log('🎯 Opening quiz modal for topic:', selectedTopic.title);
-                            }}
-                            className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                              videoCompleted 
-                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                                : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                            }`}
-                            disabled={!videoCompleted}
-                          >
-                            {videoCompleted ? '📝 Take Quiz & Earn Points' : '⏳ Complete Video First'}
-                          </button>
+                        <div className="space-y-2 mt-2">
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();

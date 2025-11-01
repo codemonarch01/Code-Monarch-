@@ -36,28 +36,58 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
   useEffect(() => {
     const handleARTaskCompleted = async (event) => {
       try {
+        console.log('📥 Received ar-task-completed event:', event.detail)
         const { type, points } = event.detail || {}
+        
         if (type === 'tree_planting' && points) {
-          setMessage(`🌱 Tree planted successfully in AR! +${points} Eco Points`)
+          console.log(`✅ Processing points award: ${points} points for ${type}`)
+          
+          setMessage(`🌱 Tree planted successfully! +${points} Eco Points`)
+          
           // Award eco-points in backend
           try {
-            await gamifyAPI.completeTask({ taskType: 'ar_tree_planting', ecoPoints: points })
+            console.log('📡 Calling backend API to award points...')
+            const response = await gamifyAPI.completeTask({ 
+              taskType: 'ar_tree_planting', 
+              ecoPoints: points 
+            })
+            console.log('✅ Backend response:', response)
           } catch (e) {
-            console.warn('Failed to record AR task completion:', e)
+            console.warn('⚠️ Failed to record AR task completion in backend:', e)
+            // Continue even if backend fails
           }
-          // Award points via callback
-          if (onAward) {
+          
+          // Award points via callback (updates UI immediately)
+          if (onAward && typeof onAward === 'function') {
+            console.log('🎁 Calling onAward callback with points:', points)
             onAward({ type: 'ar_task', points })
+          } else {
+            console.warn('⚠️ onAward callback is not available')
           }
+          
+          // Refresh user data to update points display
+          try {
+            if (window.dispatchEvent) {
+              window.dispatchEvent(new CustomEvent('refresh-user-data'))
+            }
+          } catch (e) {
+            console.warn('Could not dispatch refresh event:', e)
+          }
+        } else {
+          console.warn('⚠️ Invalid event detail:', event.detail)
         }
       } catch (e) {
-        console.error('Error handling AR task completion:', e)
+        console.error('❌ Error handling AR task completion:', e)
       }
     }
 
+    // Listen on both window and document
     window.addEventListener('ar-task-completed', handleARTaskCompleted)
+    document.addEventListener('ar-task-completed', handleARTaskCompleted)
+    
     return () => {
       window.removeEventListener('ar-task-completed', handleARTaskCompleted)
+      document.removeEventListener('ar-task-completed', handleARTaskCompleted)
     }
   }, [onAward])
 
@@ -132,9 +162,14 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
 
   const doArTask = async () => {
     try {
+      // Clear any previous messages
+      setMessage('')
+      
+      console.log('🌱 Opening AR experience...')
+      
       // Always open AR, even without a 3D model
       setShowAR(true)
-      setMessage('🌱 Opening AR experience...')
+      console.log('✅ showAR set to true')
       
       // If model is available, record interaction
       if (currentModel?.id) {
@@ -147,6 +182,7 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
     } catch (e) {
       console.error('AR task error:', e)
       setMessage('⚠️ Could not open AR. Please try again.')
+      setShowAR(false)
     }
   }
 
@@ -330,9 +366,45 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
       </motion.div>
 
       {showAR && (
-        <Suspense fallback={<div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.05)', zIndex: 40 }}>Loading AR...</div>}>
-          <TreeAR onClose={() => setShowAR(false)} />
-        </Suspense>
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          zIndex: 99999,
+          pointerEvents: 'auto'
+        }}>
+          <Suspense fallback={
+            <div style={{ 
+              position: 'fixed', 
+              inset: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              background: 'rgba(0,0,0,0.9)', 
+              zIndex: 100000,
+              color: 'white',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              <div style={{ fontSize: '48px', animation: 'spin 1s linear infinite' }}>🌱</div>
+              <div style={{ fontSize: '20px', fontWeight: 'bold' }}>Loading AR Experience...</div>
+              <div style={{ fontSize: '14px', opacity: 0.8 }}>Please wait</div>
+            </div>
+          }>
+            <TreeAR 
+              onClose={() => {
+                console.log('🔄 Closing AR modal')
+                setShowAR(false)
+                // Don't clear message immediately, let it show success
+                setTimeout(() => {
+                  setMessage('')
+                }, 3000) // Clear message after 3 seconds
+              }} 
+            />
+          </Suspense>
+        </div>
       )}
 
       {/* Enhanced Quiz */}

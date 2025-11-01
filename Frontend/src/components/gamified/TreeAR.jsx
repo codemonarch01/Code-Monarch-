@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Canvas } from '@react-three/fiber'
 import { XR, ARButton, useXR } from '@react-three/xr'
 import * as THREE from 'three'
@@ -93,51 +94,90 @@ function ARSessionTracker({ onSessionStart, onSessionEnd }) {
 
 const overlayStyle = {
   position: 'fixed',
-  inset: 0,
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
   width: '100vw',
   height: '100vh',
-  background: 'rgba(0,0,0,0.02)',
-  zIndex: 9999,
+  background: 'rgba(0,0,0,0.85)',
+  zIndex: 100000,
+  display: 'flex',
+  flexDirection: 'column',
+  visibility: 'visible',
+  opacity: 1,
+  pointerEvents: 'auto',
 }
 
 const closeBtnStyle = {
   position: 'fixed',
   top: 12,
   right: 12,
-  zIndex: 60,
+  zIndex: 1000010,
   background: '#111827',
   color: '#fff',
-  padding: '8px 12px',
+  padding: '10px 18px',
   borderRadius: 8,
   fontSize: 14,
+  cursor: 'pointer',
+  border: 'none',
+  fontWeight: 'bold',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+  pointerEvents: 'auto',
+  userSelect: 'none',
+  WebkitUserSelect: 'none',
 }
 
 export default function TreeAR({ onClose }) {
   const overlayRef = useRef(null)
+  const containerRef = useRef(null)
   const [arSupported, setArSupported] = useState(null)
   const [canvasReady, setCanvasReady] = useState(false)
   const [arSessionActive, setArSessionActive] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
+  // Create portal container
   useEffect(() => {
-    let mounted = true
+    console.log('🌲 TreeAR component mounted')
+    const container = document.createElement('div')
+    container.id = 'ar-modal-container'
+    container.style.position = 'fixed'
+    container.style.top = '0'
+    container.style.left = '0'
+    container.style.width = '100%'
+    container.style.height = '100%'
+    container.style.zIndex = '100000'
+    document.body.appendChild(container)
+    containerRef.current = container
+    setMounted(true)
+
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    
     const check = async () => {
       try {
+        console.log('🔍 Checking AR support...')
         if (navigator.xr && navigator.xr.isSessionSupported) {
           const ok = await navigator.xr.isSessionSupported('immersive-ar')
-          if (mounted) setArSupported(ok)
+          console.log('📱 AR supported:', ok)
+          setArSupported(ok)
         } else {
-          if (mounted) setArSupported(false)
+          console.log('❌ navigator.xr not available')
+          setArSupported(false)
         }
-      } catch {
-        if (mounted) setArSupported(false)
+      } catch (error) {
+        console.error('⚠️ AR check error:', error)
+        setArSupported(false)
       }
     }
     check()
+    
     return () => { 
-      mounted = false 
+      console.log('🧹 TreeAR component unmounting')
       document.body.style.overflow = prevOverflow
+      if (containerRef.current && containerRef.current.parentNode) {
+        containerRef.current.parentNode.removeChild(containerRef.current)
+      }
     }
   }, [])
 
@@ -149,34 +189,76 @@ export default function TreeAR({ onClose }) {
     zIndex: 10010,
   }
 
-  return (
-    <div ref={overlayRef} style={overlayStyle}>
-      <button onClick={onClose} style={closeBtnStyle}>✕ Close AR</button>
+  console.log('🎨 Rendering TreeAR - arSupported:', arSupported, 'canvasReady:', canvasReady, 'mounted:', mounted)
+
+  const modalContent = (
+    <div 
+      ref={overlayRef} 
+      style={overlayStyle}
+      onClick={(e) => {
+        // Prevent canvas from capturing clicks on overlay
+        if (e.target === overlayRef.current) {
+          e.stopPropagation()
+        }
+      }}
+    >
+      <button 
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log('❌ Close AR clicked')
+          if (onClose && typeof onClose === 'function') {
+            onClose()
+          } else {
+            console.error('⚠️ onClose is not a function:', onClose)
+          }
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+        }}
+        style={closeBtnStyle}
+        type="button"
+        aria-label="Close AR"
+      >
+        ✕ Close AR
+      </button>
 
       {arSupported === false ? (
-        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', background: '#fef3c7', color: '#92400e', padding: '8px 16px', borderRadius: 8, zIndex: 60, fontSize: 14, maxWidth: '90%', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', background: '#fef3c7', color: '#92400e', padding: '12px 20px', borderRadius: 8, zIndex: 100002, fontSize: 14, maxWidth: '90%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
           ⚠️ AR not supported on this device/browser. Showing 3D preview instead.
         </div>
       ) : arSupported === null ? (
-        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', background: '#e5e7eb', color: '#111827', padding: '8px 16px', borderRadius: 8, zIndex: 60, fontSize: 14 }}>
-          Checking AR support...
+        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', background: '#e5e7eb', color: '#111827', padding: '12px 20px', borderRadius: 8, zIndex: 100002, fontSize: 14, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          🔍 Checking AR support...
         </div>
       ) : (
-        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', background: '#d1fae5', color: '#065f46', padding: '8px 16px', borderRadius: 8, zIndex: 60, fontSize: 14, maxWidth: '90%', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', top: 56, left: '50%', transform: 'translateX(-50%)', background: '#d1fae5', color: '#065f46', padding: '12px 20px', borderRadius: 8, zIndex: 100002, fontSize: 14, maxWidth: '90%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
           ✅ AR Ready! Tap the button below to start planting your virtual tree.
         </div>
       )}
 
       <Canvas 
-        style={{ width: '100%', height: '100%' }} 
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          flex: 1, 
+          zIndex: 100001, 
+          pointerEvents: 'auto',
+          position: 'relative'
+        }} 
         gl={{ antialias: true, alpha: true, xrCompatible: true }} 
         camera={{ position: [0, 0, 2], fov: 75 }}
+        raycaster={{ computeOffsets: ({ clientX, clientY }) => ({ offsetX: clientX, offsetY: clientY }) }}
         onCreated={({ gl }) => { 
+          console.log('🎬 Canvas created, setting up WebGL...')
           gl.setClearAlpha(0);
           if (gl.xr) {
             gl.xr.enabled = true;
+            console.log('✅ WebXR enabled')
           }
           setCanvasReady(true);
+          console.log('✅ Canvas ready')
         }}
       >
         {canvasReady && arSupported ? (
@@ -205,7 +287,12 @@ export default function TreeAR({ onClose }) {
 
         {canvasReady && arSupported && (
           <ARButton 
-            style={arButtonStyle}
+            style={{
+              ...arButtonStyle,
+              zIndex: 1000020,
+              pointerEvents: 'auto',
+              cursor: 'pointer'
+            }}
             sessionInit={{ 
               optionalFeatures: ['hit-test', 'dom-overlay', 'local-floor'],
               domOverlay: { root: overlayRef.current || document.body }
@@ -217,13 +304,61 @@ export default function TreeAR({ onClose }) {
       </Canvas>
       
       {canvasReady && !arSupported && (
-        <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: '#10b981', color: '#fff', padding: '12px 24px', borderRadius: 8, zIndex: 60, fontSize: 16, fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-          onClick={() => {
-            // Award points for 3D preview completion
-            if (window.dispatchEvent) {
-              window.dispatchEvent(new CustomEvent('ar-task-completed', { detail: { type: 'tree_planting', points: 20 } }));
+        <div 
+          style={{ 
+            position: 'fixed', 
+            bottom: 20, 
+            left: '50%', 
+            transform: 'translateX(-50%)', 
+            background: '#10b981', 
+            color: '#fff', 
+            padding: '12px 24px', 
+            borderRadius: 8, 
+            zIndex: 1000020, 
+            fontSize: 16, 
+            fontWeight: 'bold', 
+            cursor: 'pointer', 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            pointerEvents: 'auto',
+            userSelect: 'none'
+          }}
+          onClick={async (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('✅ Complete 3D Preview clicked - Awarding points')
+            
+            try {
+              // Award points for 3D preview completion
+              const event = new CustomEvent('ar-task-completed', { 
+                detail: { type: 'tree_planting', points: 20 },
+                bubbles: true,
+                cancelable: true
+              })
+              
+              console.log('📤 Dispatching ar-task-completed event:', event.detail)
+              
+              // Dispatch on window
+              window.dispatchEvent(event)
+              
+              // Also dispatch on document for broader reach
+              document.dispatchEvent(event)
+              
+              // Small delay to ensure event is processed
+              await new Promise(resolve => setTimeout(resolve, 100))
+              
+              console.log('✅ Points event dispatched, closing modal')
+              
+              // Close modal after awarding points
+              if (onClose && typeof onClose === 'function') {
+                onClose();
+              }
+            } catch (error) {
+              console.error('❌ Error in Complete 3D Preview:', error)
+              // Still close the modal even if there's an error
+              if (onClose && typeof onClose === 'function') {
+                onClose();
+              }
             }
-            onClose();
           }}
         >
           ✓ Complete 3D Preview (+20 Points)
@@ -238,5 +373,12 @@ export default function TreeAR({ onClose }) {
       )}
     </div>
   )
+
+  // Use portal to render directly to body
+  if (!mounted || !containerRef.current) {
+    return null
+  }
+
+  return createPortal(modalContent, containerRef.current)
 }
 
