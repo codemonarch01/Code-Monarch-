@@ -760,7 +760,7 @@ const Profile = ({ onNavigate }) => {
                         }}
                       />
                       <div className="flex gap-3">
-                        <label className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium whitespace-nowrap cursor-pointer flex items-center justify-center">
+                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap cursor-pointer flex items-center justify-center">
                           <input
                             type="file"
                             accept="image/*"

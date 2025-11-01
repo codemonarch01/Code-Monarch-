@@ -10,17 +10,82 @@ const Leaderboard = () => {
   const [school, setSchool] = useState('')
   const [college, setCollege] = useState('')
 
+  // Static leaderboard data with IIT, GGI and other colleges
+  const staticLeaderboardData = [
+    { _id: '1', name: 'Rajesh Kumar', email: 'rajesh.kumar@iitdelhi.ac.in', grade: 'B.Tech 2nd Year', ecoPoints: 485, badges: [{ id: '1', icon: '🏆', title: 'Champion', description: 'Top scorer' }, { id: '2', icon: '⭐', title: 'Star Performer', description: 'Excellent work' }], preferences: { college: 'IIT Delhi' } },
+    { _id: '2', name: 'Priya Sharma', email: 'priya.sharma@ggits.ac.in', grade: 'B.Tech 3rd Year', ecoPoints: 462, badges: [{ id: '1', icon: '🥇', title: 'Gold Medal', description: 'First place' }, { id: '2', icon: '💡', title: 'Innovator', description: 'Creative thinker' }], preferences: { college: 'GGI' } },
+    { _id: '3', name: 'Amit Patel', email: 'amit.patel@iitbombay.ac.in', grade: 'B.Tech 1st Year', ecoPoints: 448, badges: [{ id: '1', icon: '🚀', title: 'Rocket', description: 'Fast learner' }, { id: '2', icon: '🌟', title: 'Rising Star', description: 'Upcoming talent' }], preferences: { college: 'IIT Bombay' } },
+    { _id: '4', name: 'Sneha Reddy', email: 'sneha.reddy@ggits.ac.in', grade: 'M.Tech 1st Year', ecoPoints: 432, badges: [{ id: '1', icon: '🎯', title: 'Target Master', description: 'Goal achiever' }, { id: '2', icon: '📚', title: 'Scholar', description: 'Knowledge seeker' }], preferences: { college: 'GGI' } },
+    { _id: '5', name: 'Vikram Singh', email: 'vikram.singh@iitkharagpur.ac.in', grade: 'B.Tech 4th Year', ecoPoints: 418, badges: [{ id: '1', icon: '🔥', title: 'Hot Streak', description: 'Consistent performer' }], preferences: { college: 'IIT Kharagpur' } },
+    { _id: '6', name: 'Ananya Gupta', email: 'ananya.gupta@ggits.ac.in', grade: 'B.Tech 2nd Year', ecoPoints: 405, badges: [{ id: '1', icon: '💎', title: 'Diamond', description: 'Precious contributor' }, { id: '2', icon: '🎨', title: 'Artist', description: 'Creative mind' }], preferences: { college: 'GGI' } },
+    { _id: '7', name: 'Rohit Mehta', email: 'rohit.mehta@iitmadras.ac.in', grade: 'B.Tech 3rd Year', ecoPoints: 392, badges: [{ id: '1', icon: '⚡', title: 'Lightning', description: 'Quick learner' }], preferences: { college: 'IIT Madras' } },
+    { _id: '8', name: 'Kavita Nair', email: 'kavita.nair@ggits.ac.in', grade: 'M.Tech 2nd Year', ecoPoints: 378, badges: [{ id: '1', icon: '🎓', title: 'Graduate', description: 'Advanced learner' }, { id: '2', icon: '🏅', title: 'Achiever', description: 'Goal setter' }], preferences: { college: 'GGI' } },
+    { _id: '9', name: 'Aditya Joshi', email: 'aditya.joshi@iitroorkee.ac.in', grade: 'B.Tech 2nd Year', ecoPoints: 365, badges: [{ id: '1', icon: '🌟', title: 'Star', description: 'Top performer' }], preferences: { college: 'IIT Roorkee' } },
+    { _id: '10', name: 'Meera Desai', email: 'meera.desai@ggits.ac.in', grade: 'B.Tech 1st Year', ecoPoints: 352, badges: [{ id: '1', icon: '🎖️', title: 'Medal', description: 'Achievement unlocked' }, { id: '2', icon: '📖', title: 'Reader', description: 'Knowledge enthusiast' }], preferences: { college: 'GGI' } },
+    { _id: '11', name: 'Siddharth Verma', email: 'siddharth.verma@iitkanpur.ac.in', grade: 'B.Tech 3rd Year', ecoPoints: 338, badges: [{ id: '1', icon: '🔬', title: 'Scientist', description: 'Research oriented' }], preferences: { college: 'IIT Kanpur' } },
+    { _id: '12', name: 'Divya Kapoor', email: 'divya.kapoor@ggits.ac.in', grade: 'B.Tech 2nd Year', ecoPoints: 325, badges: [{ id: '1', icon: '💻', title: 'Coder', description: 'Tech enthusiast' }, { id: '2', icon: '🎪', title: 'Performer', description: 'Active participant' }], preferences: { college: 'GGI' } },
+    { _id: '13', name: 'Arjun Malhotra', email: 'arjun.malhotra@iitguwahati.ac.in', grade: 'B.Tech 1st Year', ecoPoints: 312, badges: [{ id: '1', icon: '🏃', title: 'Runner', description: 'Fast progress' }], preferences: { college: 'IIT Guwahati' } },
+    { _id: '14', name: 'Pooja Shah', email: 'pooja.shah@ggits.ac.in', grade: 'M.Tech 1st Year', ecoPoints: 298, badges: [{ id: '1', icon: '🎯', title: 'Precise', description: 'Accurate learner' }, { id: '2', icon: '📊', title: 'Analyst', description: 'Data driven' }], preferences: { college: 'GGI' } },
+    { _id: '15', name: 'Karan Khanna', email: 'karan.khanna@iitbhubaneswar.ac.in', grade: 'B.Tech 2nd Year', ecoPoints: 285, badges: [{ id: '1', icon: '🎮', title: 'Gamer', description: 'Interactive learner' }], preferences: { college: 'IIT Bhubaneswar' } },
+  ]
+
   const load = async () => {
     setLoading(true)
     try {
       const res = await gamifyAPI.getLeaderboard({ grade, school, college, limit: 20 })
-      setRows(res?.data?.users || [])
+      const apiUsers = res?.data?.users || []
+      
+      // If no results from API or empty, use static data
+      // Apply filters to static data if needed
+      let filteredData = staticLeaderboardData
+      
+      if (grade) {
+        filteredData = filteredData.filter(u => 
+          u.grade?.toLowerCase().includes(grade.toLowerCase())
+        )
+      }
+      
+      if (school) {
+        filteredData = filteredData.filter(u => 
+          u.preferences?.school?.toLowerCase().includes(school.toLowerCase())
+        )
+      }
+      
+      if (college) {
+        filteredData = filteredData.filter(u => 
+          u.preferences?.college?.toLowerCase().includes(college.toLowerCase())
+        )
+      }
+      
+      // Use API data if available, otherwise use filtered static data
+      setRows(apiUsers.length > 0 ? apiUsers : filteredData)
     } catch (_) {
-      setRows([])
+      // On error, use static data with filters applied
+      let filteredData = staticLeaderboardData
+      
+      if (grade) {
+        filteredData = filteredData.filter(u => 
+          u.grade?.toLowerCase().includes(grade.toLowerCase())
+        )
+      }
+      
+      if (school) {
+        filteredData = filteredData.filter(u => 
+          u.preferences?.school?.toLowerCase().includes(school.toLowerCase())
+        )
+      }
+      
+      if (college) {
+        filteredData = filteredData.filter(u => 
+          u.preferences?.college?.toLowerCase().includes(college.toLowerCase())
+        )
+      }
+      
+      setRows(filteredData)
     } finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [grade, school, college])
 
   const getRankIcon = (rank) => {
     if (rank === 1) return <Crown className="w-5 h-5 text-yellow-500" />
@@ -190,9 +255,17 @@ const Leaderboard = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                          {u.grade || 'Not specified'}
-                        </span>
+                        <div>
+                          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium block mb-1">
+                            {u.grade || 'Not specified'}
+                          </span>
+                          {u.preferences?.college && (
+                            <span className="text-xs text-gray-600">{u.preferences.college}</span>
+                          )}
+                          {u.email && (
+                            <div className="text-xs text-gray-500 mt-0.5">{u.email}</div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">

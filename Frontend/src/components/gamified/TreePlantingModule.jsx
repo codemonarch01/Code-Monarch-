@@ -32,6 +32,35 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
     } catch {}
   }, [certificates])
 
+  // Listen for AR task completion
+  useEffect(() => {
+    const handleARTaskCompleted = async (event) => {
+      try {
+        const { type, points } = event.detail || {}
+        if (type === 'tree_planting' && points) {
+          setMessage(`🌱 Tree planted successfully in AR! +${points} Eco Points`)
+          // Award eco-points in backend
+          try {
+            await gamifyAPI.completeTask({ taskType: 'ar_tree_planting', ecoPoints: points })
+          } catch (e) {
+            console.warn('Failed to record AR task completion:', e)
+          }
+          // Award points via callback
+          if (onAward) {
+            onAward({ type: 'ar_task', points })
+          }
+        }
+      } catch (e) {
+        console.error('Error handling AR task completion:', e)
+      }
+    }
+
+    window.addEventListener('ar-task-completed', handleARTaskCompleted)
+    return () => {
+      window.removeEventListener('ar-task-completed', handleARTaskCompleted)
+    }
+  }, [onAward])
+
   const studentName = useMemo(() => {
     if (profileData?.name) return profileData.name
     try {
@@ -103,15 +132,21 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
 
   const doArTask = async () => {
     try {
+      // Always open AR, even without a 3D model
       setShowAR(true)
-      if (!currentModel?.id) return setMessage('Load a 3D model first.')
-      await aiAPI.interactWithModel(currentModel.id, 'tree_planting')
-      setMessage('🌱 Tree planted successfully in AR! +20 Eco Points')
-      // Award eco-points in backend
-      await gamifyAPI.completeTask({ taskType: 'ar_tree_planting' })
-      onAward && onAward({ type: 'ar_task', points: 20 })
+      setMessage('🌱 Opening AR experience...')
+      
+      // If model is available, record interaction
+      if (currentModel?.id) {
+        try {
+          await aiAPI.interactWithModel(currentModel.id, 'tree_planting')
+        } catch (e) {
+          console.warn('Failed to record model interaction:', e)
+        }
+      }
     } catch (e) {
-      setMessage('Could not record AR task.')
+      console.error('AR task error:', e)
+      setMessage('⚠️ Could not open AR. Please try again.')
     }
   }
 
@@ -266,7 +301,7 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
         <p className="text-gray-700 mb-4">
           Experience tree planting in augmented reality! Place a virtual sapling and follow the interactive planting steps.
         </p>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap items-center">
           <button 
             onClick={doArTask} 
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
@@ -283,7 +318,11 @@ const TreePlantingModule = ({ currentModel, onAward }) => {
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-sm text-green-600 mt-3 p-2 bg-green-100 rounded"
+            className={`text-sm mt-3 p-2 rounded ${
+              message.includes('successfully') || message.includes('+20') 
+                ? 'text-green-600 bg-green-100' 
+                : 'text-blue-600 bg-blue-100'
+            }`}
           >
             {message}
           </motion.p>

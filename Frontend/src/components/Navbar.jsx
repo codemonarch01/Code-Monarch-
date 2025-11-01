@@ -90,14 +90,14 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             whileHover={{ scale: 1.02 }}
-            className="flex items-center space-x-3 cursor-pointer group -ml-2 md:-ml-4"
+            className="flex items-center space-x-3 cursor-pointer group -ml-3 md:-ml-6"
             onClick={() => handleNavigation('home')}
           >
             <motion.div 
               className="w-10 h-10 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg ring-1 ring-black/5 group-hover:shadow-xl transition-all duration-300"
               whileHover={{ rotate: 5 }}
             >
-              <GraduationCap className="w-6 h-6 text-white" />
+              <GraduationCap className="w-6 h-6 text-white " />
             </motion.div>
             <span className="text-2xl font-extrabold bg-gradient-to-r from-emerald-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent tracking-tight group-hover:tracking-wider group-hover:scale-105 transition-all duration-300">
               EduSmart
@@ -105,7 +105,7 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             {mainItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -116,7 +116,7 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
                   onClick={() => handleNavigation(item.id)}
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-300 relative group ${
+                  className={`inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-300 relative group ${
                     isActive
                       ? 'bg-primary-50 text-primary-700 border border-primary-200/50'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -138,12 +138,12 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
               );
             })}
             {/* More dropdown */}
-            <div className="relative">
+            <div className="relative ml-2">
               <motion.button
                 onClick={() => setIsMoreOpen(!isMoreOpen)}
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-300"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-300"
               >
                 <MoreHorizontal className="w-5 h-5" />
                 <span className="font-medium text-sm">More</span>
@@ -185,12 +185,10 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
           </div>
 
           {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-3">
-            
-
+          <div className="hidden md:flex items-center gap-4">
             {/* Eco Points Badge */}
             <motion.div 
-              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200 whitespace-nowrap"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200 whitespace-nowrap flex items-center justify-center"
               whileHover={{ scale: 1.05 }}
             >
               🌱 {ecoPoints} Points
@@ -274,9 +272,9 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="md:hidden flex items-center gap-3">
             {/* Mobile Eco Points */}
-            <div className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+            <div className="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 flex items-center justify-center">
               🌱 {ecoPoints}
             </div>
             
@@ -284,7 +282,7 @@ const Navbar = ({ user, onLogout, currentPage, onNavigate }) => {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300"
+              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 flex items-center justify-center"
             >
               <motion.div
                 animate={{ rotate: isMobileMenuOpen ? 180 : 0 }}
