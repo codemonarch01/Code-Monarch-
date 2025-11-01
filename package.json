@@ -1,0 +1,32 @@
+{
+  "name": "edulearn-platform",
+  "version": "1.0.0",
+  "description": "AI + AR + 3D E-Learning Platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd Backend && npm start",
+    "start:frontend": "cd Frontend && npm run dev",
+    "install:all": "npm install && cd Backend && npm install && cd ../Frontend && npm install",
+    "seed": "cd Backend && npm run seed",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "education",
+    "e-learning",
+    "ai",
+    "ar",
+    "3d",
+    "react",
+    "nodejs",
+    "mongodb"
+  ],
+  "author": "EduLearn Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.6"
+  }
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f7f8fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#2563eb;--ring:#93c5fd;}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:880px;margin:40px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,.06);overflow:hidden}
+    .head{padding:20px 24px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;justify-content:space-between}
+    .title{font-size:18px;font-weight:600}
+    form{padding:24px;display:grid;gap:16px}
+    label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+    input,textarea{width:100%;padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;font:inherit}
+    input:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px var(--ring)}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:grid;gap:16px}
+    @media(min-width:640px){.row{grid-template-columns:1fr 1fr}}
+    .btn{background:var(--primary);color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+    .note{padding:0 24px 24px;color:var(--muted);font-size:13px}
+    .ok{color:#059669}.err{color:#dc2626}
+  </style>
+  <script>
+    async function submitForm(e){
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const subject = `Message from ${name}`;
+      const note = document.getElementById('note');
+      note.textContent = '';
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try{
+        const res = await fetch('http://localhost:5000/api/contact',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ name,email,subject,message,inquiryType:'general' })
+        });
+        const data = await res.json();
+        if(res.ok && data?.status==='success'){
+          note.innerHTML = '<span class="ok">Your message was sent successfully. Check your inbox for a copy.</span>';
+          (document.getElementById('contactForm')).reset();
+          alert('Thanks! Your message has been sent.');
+        } else {
+          note.innerHTML = '<span class="err">Failed to send your message. Please try again.</span>';
+          alert('Failed to send your message.');
+        }
+      }catch(err){
+        note.innerHTML = '<span class="err">Network error. Please try again.</span>';
+        alert('Network error.');
+      }finally{
+        btn.disabled = false; btn.textContent = 'Send Message';
+      }
+    }
+  </script>
+  </head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <div class="title">Contact Us</div>
+        <div style="font-size:12px;color:var(--muted)">We typically reply within 24 hours</div>
+      </div>
+      <form id="contactForm" onsubmit="submitForm(event)">
+        <div class="row">
+          <div>
+            <label for="name">Full Name</label>
+            <input id="name" name="name" placeholder="Your full name" required />
+          </div>
+          <div>
+            <label for="email">Email Address</label>
+            <input id="email" type="email" name="email" placeholder="you@example.com" required />
+          </div>
+        </div>
+        <div>
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="How can we help you?" required></textarea>
+        </div>
+        <div>
+          <button id="submitBtn" class="btn" type="submit">Send Message</button>
+        </div>
+      </form>
+      <div id="note" class="note"></div>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+

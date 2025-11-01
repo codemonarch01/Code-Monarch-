@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing Physics Topics API</h1>
+    <button onclick="testAPI()">Test Physics Topics</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/topics?subject=Physics&grade=Grade%2012');
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                document.getElementById('result').innerHTML = `
+                    <h2>Result:</h2>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                    <p><strong>Topics Found:</strong> ${data.data.topics.length}</p>
+                    <ul>
+                        ${data.data.topics.map(topic => `<li>${topic.title} (${topic.duration})</li>`).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
+
